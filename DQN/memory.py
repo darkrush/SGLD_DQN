@@ -15,7 +15,7 @@ class Memory(object):
         self._maxsize = limit
         self._next_idx = 0
     
-    @property
+    
     def nb_entries(self):
         return len(self._storage)
         
@@ -57,7 +57,7 @@ class Memory(object):
     def sample_last(self, batch_size):
         idxes = [len(self._storage)-1-i for i in range(batch_size)]
         return self._encode_sample(idxes)
-        
+     
     def sample(self, batch_size):
         """Sample a batch of experiences.
         Parameters

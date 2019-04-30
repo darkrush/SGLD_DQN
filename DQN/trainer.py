@@ -4,6 +4,7 @@ import pickle
 import torch
 import gym
 from copy import deepcopy
+from cProfile import Profile
 
 from atari_wrappers import wrap_deepmind, make_atari
 from arguments import Singleton_arger
@@ -78,8 +79,8 @@ class DQN_trainer(object):
                     
                 
                 
-                last_error = self.agent.calc_last_error()
-                Singleton_logger.trigger_log('last_error', last_error,self.total_step)
+                #last_error = self.agent.calc_last_error()
+                #Singleton_logger.trigger_log('last_error', last_error,self.total_step)
                 Singleton_logger.trigger_log('train_episode_length', self.last_episode_length,self.total_step)
                 Singleton_logger.trigger_log('train_episode_reward', self.last_episode_reward,self.total_step)
                 Singleton_logger.trigger_log('q_loss_mean', q_loss_mean, self.total_step)
@@ -89,7 +90,6 @@ class DQN_trainer(object):
             Singleton_evaluator.trigger_load_from_file(actor_dir = self.result_dir)
             Singleton_evaluator.trigger_eval_process(total_cycle = self.total_step)    
             Singleton_logger.trigger_save()
-        
     def apply_train(self):
         #update agent for nb_train_steps times
         ql_list = []
@@ -97,7 +97,7 @@ class DQN_trainer(object):
             ql = self.agent.update()
             ql_list.append(ql)
         return np.mean(ql_list)
-
+        
     def apply_action(self, action):
         #apply the action to environment and get next state, reawrd and other information
         obs, reward, done, info = self.env.step(action)
@@ -122,8 +122,15 @@ class DQN_trainer(object):
         Singleton_evaluator.trigger_close()
         Singleton_logger.trigger_close()
 
-if __name__ == "__main__":
+def main():
     trainer = DQN_trainer()
     trainer.setup()
     trainer.warmup()
     trainer.train()
+
+if __name__ == "__main__":
+    prof = Profile()
+    prof.runcall(main)
+    prof.print_stats()
+    prof.dump_stats('test.prof')
+   

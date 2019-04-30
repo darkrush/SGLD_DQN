@@ -61,7 +61,7 @@ class DQN(object):
     def update_target(self):
         for target_param, param in zip(self.target_qnet.parameters(), self.qnet.parameters()):
             target_param.data.copy_(param.data)
-         
+             
     def update(self):
         batch = self.memory.sample(self.batch_size)
         q_eval = self.qnet(batch['obs0']).gather(1,batch['actions'].unsqueeze(1))
