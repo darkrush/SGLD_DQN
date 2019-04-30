@@ -36,7 +36,7 @@ class DQN(object):
         self.qnet         = copy.deepcopy(qnet)
         self.target_qnet  = copy.deepcopy(qnet)
         
-        self.memory = Memory(self.buffer_size, self.with_cuda)
+        self.memory = Memory(self.buffer_size,nb_action, self.with_cuda)
         
         if self.with_cuda:
             self.qnet.cuda()
@@ -51,8 +51,10 @@ class DQN(object):
         pass
     
     def before_cycle(self):
-        self.epsilon =max((self.epsilon- (1-0.02)/100000),0.02)
+        pass
         
+    def before_iter(self):
+        self.epsilon =max((self.epsilon- (1-0.01)/250000),0.01)
         
     def store_transition(self, s_t, a_t, r_t, s_t1, done_t):
         #s_t = torch.tensor(s_t,dtype = torch.float32,requires_grad = False)
@@ -64,14 +66,15 @@ class DQN(object):
              
     def update(self):
         batch = self.memory.sample(self.batch_size)
-        q_eval = self.qnet(batch['obs0']).gather(1,batch['actions'].unsqueeze(1))
-        #.gather(1, batch['actions'])
+        self.qnet_optim.zero_grad()
+
+        q_eval = self.qnet(batch['obs0']).gather(1,batch['actions'])
         with torch.no_grad():
             _ , a_next = self.qnet(batch['obs1']).max(1)
             q_next = self.target_qnet(batch['obs1']).gather(1, a_next.unsqueeze(1))
             q_target = batch['rewards'] + self.discount * (1-batch['terminals1']) * q_next
         value_loss = nn.functional.mse_loss(q_eval, q_target)
-        self.qnet_optim.zero_grad()
+        
         value_loss.backward()
         self.qnet_optim.step()
         return value_loss.item()
@@ -79,11 +82,11 @@ class DQN(object):
     def calc_last_error(self):
         # Sample batch
         batch = self.memory.sample_last(self.batch_size)
-        tensor_obs0 = batch['obs0']
-        tensor_obs1 = batch['obs1']
+        #tensor_obs0 = batch['obs0']
+        #tensor_obs1 = batch['obs1']
         # Prepare for the target q batch
         with torch.no_grad():
-            q_eval = self.qnet(batch['obs0']).gather(1, batch['actions'].unsqueeze(1))
+            q_eval = self.qnet(batch['obs0']).gather(1, batch['actions'])
             _ , a_next = self.qnet(batch['obs1']).max(1)
             q_next = self.target_qnet(batch['obs1']).gather(1, a_next.unsqueeze(1))
             q_target = batch['rewards'] + self.discount * (1-batch['terminals1']) * q_next
