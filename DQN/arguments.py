@@ -32,7 +32,6 @@ class Args(object):
         #parser.set_defaults(layer_norm=True)
         
         #DDPG args
-        parser.add_argument('--actor-lr', default=0.0001, type=float, help='actor net learning rate')
         parser.add_argument('--critic-lr', default=0.0001, type=float, help='critic net learning rate')
         parser.add_argument('--lr-decay', default=0, type=float, help='critic lr decay')
         parser.add_argument('--l2-critic', default=0.01, type=float, help='critic l2 regularization')
@@ -41,7 +40,7 @@ class Args(object):
         parser.add_argument('--tau', default=0.001, type=float, help='moving average for target network')
         parser.add_argument('--nocuda', dest='with_cuda', action='store_false',help='disable cuda')
         parser.set_defaults(with_cuda=True)
-        parser.add_argument('--buffer-size', default=1e5, type=int, help='memory buffer size')
+        parser.add_argument('--buffer-size', default=1e6, type=int, help='memory buffer size')
         #Exploration args
         parser.add_argument('--action-noise', dest='action_noise', action='store_true',help='enable action space noise')
         parser.set_defaults(action_noise=False)
@@ -87,7 +86,7 @@ class Args(object):
         #{ key :  args.__dict__[key] for key in ('hidden1', 'hidden2', 'layer_norm')}
         args_train = { key :  args.__dict__[key] for key in ('nb_epoch', 'nb_cycles_per_epoch', 'nb_iter_steps', 'nb_rollout_steps', 'nb_warmup_steps')}
         args_exploration = {key : args.__dict__[key] for key in ('action_noise','parameter_noise','stddev','noise_decay','SGLD_mode','SGLD_noise','num_pseudo_batches','nb_rollout_update','temp')}
-        args_agent = { key :  args.__dict__[key] for key in ('actor_lr','critic_lr','lr_decay','l2_critic','batch_size','discount','tau','buffer_size','with_cuda')}
+        args_agent = { key :  args.__dict__[key] for key in ('critic_lr','lr_decay','l2_critic','batch_size','discount','tau','buffer_size','with_cuda')}
         
         self.args_dict={'main':args_main, 'model':args_model, 'train':args_train, 'exploration':args_exploration, 'agent':args_agent}
     def __call__(self):

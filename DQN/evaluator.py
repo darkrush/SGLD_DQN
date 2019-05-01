@@ -57,7 +57,7 @@ class Evaluator(object):
         assert model_dir is not None
         self.qnet = torch.load(os.path.join(model_dir,'qnet.pkl'))
         
-    def run_eval(self,total_cycle):
+    def run_eval(self,total_step):
         assert self.qnet is not None
         observation = None
         result = []
@@ -86,10 +86,10 @@ class Evaluator(object):
         result_mean = result.mean()
         result_std = result.std(ddof = 1)
         if self.logger is not None :
-            self.logger.trigger_log( 'eval_reward_mean',result_mean, total_cycle)
-            self.logger.trigger_log( 'eval_reward_std',result_std, total_cycle)
+            self.logger.trigger_log( 'eval_reward_mean',result_mean, total_step)
+            self.logger.trigger_log( 'eval_reward_std',result_std, total_step)
         localtime = time.asctime( time.localtime(time.time()) )
-        print("{} eval : cycle {:<5d}\treward mean {:.2f}\treward std {:.2f}".format(localtime,total_cycle,result_mean,result_std))
+        print("{} eval : cycle {:<5d}\treward mean {:.2f}\treward std {:.2f}".format(localtime,total_step,result_mean,result_std))
         
     def trigger_load_from_file(self, actor_dir):
         if self.multi_process :
@@ -97,11 +97,11 @@ class Evaluator(object):
         else:
             self.laod_from_file(actor_dir)
     
-    def trigger_eval_process(self,total_cycle):
+    def trigger_eval_process(self,total_step):
         if self.multi_process :
-            self.queue.put(total_cycle,block = True)
+            self.queue.put(total_step,block = True)
         else :
-            self.run_eval(total_cycle)
+            self.run_eval(total_step)
 
     def trigger_close(self):
         if self.multi_process :

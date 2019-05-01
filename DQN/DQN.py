@@ -35,7 +35,6 @@ class DQN(object):
         
         self.qnet         = copy.deepcopy(qnet)
         self.target_qnet  = copy.deepcopy(qnet)
-        
         self.memory = Memory(self.buffer_size,nb_action, self.with_cuda)
         
         if self.with_cuda:
@@ -54,25 +53,25 @@ class DQN(object):
         pass
         
     def before_iter(self):
-        self.epsilon =max((self.epsilon- (1-0.01)/250000),0.01)
-        
+        self.epsilon =max((self.epsilon- (1-0.01)/250000),0.01)   
     def store_transition(self, s_t, a_t, r_t, s_t1, done_t):
         #s_t = torch.tensor(s_t,dtype = torch.float32,requires_grad = False)
         self.memory.append(s_t, a_t, r_t, s_t1, done_t)
         
     def update_target(self):
         for target_param, param in zip(self.target_qnet.parameters(), self.qnet.parameters()):
-            target_param.data.copy_(param.data)
-             
+            target_param.data.copy_(param.data)         
     def update(self):
         batch = self.memory.sample(self.batch_size)
+        tensor_obs0 = batch['obs0'].float()
+        tensor_obs1 = batch['obs1'].float()
         self.qnet_optim.zero_grad()
 
-        q_eval = self.qnet(batch['obs0']).gather(1,batch['actions'])
+        q_eval = self.qnet(tensor_obs0).gather(1,batch['actions'])
         with torch.no_grad():
-            _ , a_next = self.qnet(batch['obs1']).max(1)
-            q_next = self.target_qnet(batch['obs1']).gather(1, a_next.unsqueeze(1))
-            q_target = batch['rewards'] + self.discount * (1-batch['terminals1']) * q_next
+            _ , a_next = self.qnet(tensor_obs1).max(1)
+            q_next = self.target_qnet(tensor_obs1).gather(1, a_next.unsqueeze(1))
+            q_target = batch['rewards'].float() + self.discount * (1-batch['terminals1']) * q_next
         value_loss = nn.functional.mse_loss(q_eval, q_target)
         
         value_loss.backward()
@@ -82,14 +81,14 @@ class DQN(object):
     def calc_last_error(self):
         # Sample batch
         batch = self.memory.sample_last(self.batch_size)
-        #tensor_obs0 = batch['obs0']
-        #tensor_obs1 = batch['obs1']
+        tensor_obs0 = batch['obs0'].float()
+        tensor_obs1 = batch['obs1'].float()
         # Prepare for the target q batch
         with torch.no_grad():
-            q_eval = self.qnet(batch['obs0']).gather(1, batch['actions'])
-            _ , a_next = self.qnet(batch['obs1']).max(1)
-            q_next = self.target_qnet(batch['obs1']).gather(1, a_next.unsqueeze(1))
-            q_target = batch['rewards'] + self.discount * (1-batch['terminals1']) * q_next
+            q_eval = self.qnet(tensor_obs0).gather(1, batch['actions'])
+            _ , a_next = self.qnet(tensor_obs1).max(1)
+            q_next = self.target_qnet(tensor_obs1).gather(1, a_next.unsqueeze(1))
+            q_target = batch['rewards'].float() + self.discount * (1-batch['terminals1']) * q_next
             value_loss = nn.functional.mse_loss(q_eval, q_target)
         return value_loss.item()
         
