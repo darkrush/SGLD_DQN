@@ -33,7 +33,7 @@ class Evaluator(object):
             self.setup_gym_env()
             
     def setup_gym_env(self):
-        self.env = wrap_deepmind(make_atari(self.env_name), frame_stack = True)
+        self.env = wrap_deepmind(make_atari(self.env_name,monitor = False, dir = self.model_dir),episode_life=False, clip_rewards=False, frame_stack = True)
         if self.rand_seed >= 0:
             self.env.seed(self.rand_seed)
   
